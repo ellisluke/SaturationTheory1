@@ -1,13 +1,13 @@
 
 {
     "CmajorVersion":    1,
-    "ID":               "com.your_name.your_patch_ID",
+    "ID":               "com.LukeEllis_01",
     "version":          "1.0",
     "name":             "SaturationTheory",
     "description":      "SaturationTheory",
     "category":         "generator",
     "manufacturer":     "Your Company Goes Here",
-    "isInstrument":     true,
+    "isInstrument":     false,
 
     "source":           "SaturationTheory.cmajor"
 }

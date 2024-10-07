@@ -5,21 +5,58 @@
 */
 
 // Here's a very simple graph that plays a sine-wave to get you started..
-processor SaturationTheory  [[ main ]]
+graph SaturationTheory  [[ main ]]
 {
-    output stream float out;
-    input value float frequency [[ name: "Frequency", min: 5.0f, max: 1000.0f, init: 440.0f ]];
+    input stream float32 in;
+    output stream float32 out;
+    input saturator1.bound [[ name: "Saturation Bound", min: -96.0f, max: 0.0f, init: -10.0f ]];
+    
+    node saturator1 = RandomSaturator;
+    
+    connection {
+        in -> saturator1.in;
+        saturator1.out -> out;
+    }
 
-    // This is our processor's entry-point function, which is invoked
-    // by the system
+
+}
+processor RandomSaturator
+{
+    input stream float32 in;
+    input value float32 bound;
+    output stream float32 out;
+
+    std::random::RNG rng;
+
     void main()
     {
+        float32 ceiling = 0.0f;
+        float32 in_uni = 0.0f;
+        float32 in_dB = 0.0f;
+        float32 adder = 0.0f;
+        float32 out_dB = 0.0f;
+
         loop
         {
-            out <- volume * sin (phase);
+            in_uni = abs(in); // converts to unipolar float between 0 and positive 1
+            in_dB = 20 * log10(in_uni / 1); // scales that float to use dBFS
+            if (in_dB < -96.0f) // makes sure that we don't have any unnecessarily miniscule values
+            {
+                in_dB = -96.0f;
+            }
 
-            let phaseDelta = float (frequency * processor.period * twoPi);
-            phase = addModulo2Pi (phase, phaseDelta);
+            if (in_dB > bound)
+            {
+                adder = bound + rng.getFloat(0.2f);
+            }
+            else
+            {
+                adder = 0.0f;
+            }
+            out_dB = in_dB + adder;
+            
+            out <- pow(10.0f, (out_dB / 20.0f)) * (in / in_uni);
+
             advance();
         }
     }
